@@ -1,0 +1,70 @@
+steps:
+  # ===========================
+  # 1. BACKEND PROCESS
+  # ===========================
+  
+  # Build Backend Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/omnicaption-backend', './backend']
+
+  # Push Backend Image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/omnicaption-backend']
+
+  # Deploy Backend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'omnicaption-backend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/omnicaption-backend'
+      - '--region'
+      - 'asia-southeast2'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'GEMINI_API_KEY=${_GEMINI_API_KEY}' # Mengambil dari Trigger Variables
+
+  # ===========================
+  # 2. FRONTEND PROCESS
+  # ===========================
+
+  # Build Frontend Image
+  # Kita passing URL Backend agar React tahu harus nembak API ke mana saat di-build
+  - name: 'gcr.io/cloud-builders/docker'
+    args: 
+      - 'build'
+      - '--build-arg'
+      - 'VITE_API_URL=${_BACKEND_URL}' 
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/omnicaption-frontend'
+      - './frontend'
+
+  # Push Frontend Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/omnicaption-frontend']
+
+  # Deploy Frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'omnicaption-frontend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/omnicaption-frontend'
+      - '--region'
+      - 'asia-southeast2'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+images:
+  - 'gcr.io/$PROJECT_ID/omnicaption-backend'
+  - 'gcr.io/$PROJECT_ID/omnicaption-frontend'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
