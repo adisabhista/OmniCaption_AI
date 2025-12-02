@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 export interface CaptionsResponse {
     twitter: string;
@@ -15,7 +15,7 @@ export const generateCaptions = async (topic: string, tone: string, image?: File
     if (topic) formData.append('topic', topic);
     if (image) formData.append('image', image);
 
-    const response = await axios.post<CaptionsResponse>(`${API_URL}/generate`, formData, {
+    const response = await axios.post<CaptionsResponse>(`${API_URL}/api/generate`, formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
