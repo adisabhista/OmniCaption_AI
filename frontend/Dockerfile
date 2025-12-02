@@ -3,9 +3,13 @@ FROM node:18-alpine as build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
-COPY . .
+
+# Receive the argument from Cloud Build
 ARG VITE_API_URL
+# Set it as an ENV variable so Vite can see it during build
 ENV VITE_API_URL=$VITE_API_URL
+
+COPY . .
 RUN npm run build
 
 # Stage 2: Serve
